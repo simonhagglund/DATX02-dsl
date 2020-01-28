@@ -1,0 +1,3 @@
+[submodule "planning-report"]
+	path = planning-report
+	url = git@github.com:simonhagglund/Planeringsrapport.git
