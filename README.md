@@ -54,3 +54,8 @@ Commit from overleaf by clicking menu->github and press sync.
 
 ## Reports
 [Planning report](https://www.overleaf.com/6341261623qvmpxjkcdzqp).
+
+## Links
+[Drive](https://drive.google.com/drive/folders/13Dp8TciAj32UDbi2cMLHMFrGdX0Hr7FH)
+[Links on drive](https://almqvist.lib.chalmers.se/inst_fack/bookingsystem/lecture_enroll.html).
+[Time logging](https://docs.google.com/spreadsheets/d/1cGmbrufZfXkOSES6kOwcRWieCc9IW40DgF3j-mnZMpo/edit?usp=drive_web&ouid=108657493180180186395)
