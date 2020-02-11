@@ -7,6 +7,33 @@ Is the bread and butter of all Haskell coding, it's a tool that lets us develop 
 
 [stack install](https://docs.haskellstack.org/en/stable/README/).
 
+```bash
+stack init      # Setup up a new stack repo
+
+stack install   # Install new packages.
+
+stack build     # Build repo.
+
+stack ghci      # Load interactive command line developlment tool.
+
+# While in that GHCI
+
+> :l {{file or module}} # loads file or module
+> :r                    # reload
+> :t {function}         # shows you type of that thing
+> :i {function}         # shows you information of that thing
+> :k {function}         # shows you kind of that thing. (like typelevel defintion)
+
+# then
+git fetch
+git status # if git tells you that you are up to date. goto #push else
+git pull --rebase # with this you are least likely to get mearge conflicts
+                  # and if you do you have to solve them manualy.
+
+#push
+git push
+```
+
 ## codin' enviorment suggestion
 
 
