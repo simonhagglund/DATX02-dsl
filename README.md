@@ -23,15 +23,6 @@ stack ghci      # Load interactive command line developlment tool.
 > :t {function}         # shows you type of that thing
 > :i {function}         # shows you information of that thing
 > :k {function}         # shows you kind of that thing. (like typelevel defintion)
-
-# then
-git fetch
-git status # if git tells you that you are up to date. goto #push else
-git pull --rebase # with this you are least likely to get mearge conflicts
-                  # and if you do you have to solve them manualy.
-
-#push
-git push
 ```
 
 ## codin' enviorment suggestion
