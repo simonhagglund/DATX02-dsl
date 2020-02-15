@@ -11,8 +11,8 @@ main :: IO ()
 main = someFunc
 
 data Expr s where -- Syntax of expression DSL.
-    Id          :: (Num a) => Expr a            -- Identity, i.e x in math (f(x) = x)
-    Const       :: (Num a) => a -> Expr a       -- Constant function f(x) = 1
+    Id          :: Expr a            -- Identity, i.e x in math (f(x) = x)
+    Const       :: a -> Expr a       -- Constant function f(x) = 1
     (:+:)       :: Expr s -> Expr s -> Expr s   -- Addition : x+y
     (:-:)       :: Expr s -> Expr s -> Expr s   -- Subtraction : x-y
     (:*:)       :: Expr s -> Expr s -> Expr s   -- Multiplication : x*y
@@ -29,73 +29,76 @@ data Expr s where -- Syntax of expression DSL.
     Cos         :: Expr s -> Expr s             -- f(x) = cos(x)
     Tan         :: Expr s -> Expr s             -- f(x) = tan(x)
 
+showExprTD :: ExprTD -> String
+showExprTD Id                             = "x"
+showExprTD (Const c)                      = show c
+-- Addtion
+showExprTD ((Id)      :+: (Id))           = "x+x"
+showExprTD ((Const c) :+: (Const c'))     = show c ++ "+" ++ show c'
+showExprTD ((Id)      :+: (Const c))      = "x + " ++ show c
+showExprTD ((Const c) :+: (Id))           = show c ++ " + x"
+showExprTD ((Const c) :+: e)              = show c ++ " + (" ++ show e ++ ")"
+showExprTD (Id        :+: e)              = "x + (" ++ show e ++ ")"
+showExprTD (e         :+: (Const c))      = "(" ++ show e ++ ") + " ++ show c
+showExprTD (e         :+: Id)             = "(" ++ show e ++ ") + x"
+showExprTD (e         :+: e')             = "(" ++ show e ++ ") + (" ++ show e' ++ ")"
+-- Subtraction
+showExprTD ((Id)      :-: (Id))           = "x - x"
+showExprTD ((Const c) :-: (Const c'))     = show c ++ "-" ++ show c'
+showExprTD ((Id)      :-: (Const c))      = "x - " ++ show c
+showExprTD ((Const c) :-: (Id))           = show c ++ "+ -"
+showExprTD ((Const c) :-: e)              = show c ++ " - (" ++ show e ++ ")"
+showExprTD (Id        :-: e)              = "x - (" ++ show e ++ ")"
+showExprTD (e         :-: (Const c))      = "(" ++ show e ++ ") - " ++ show c
+showExprTD (e         :-: Id)             = "(" ++ show e ++ ") - x"
+showExprTD (e         :-: e')             = "(" ++ show e ++ ") - (" ++ show e' ++ ")"
+-- Multiplication
+showExprTD ((Id)      :*: (Id))           = "x*x"
+showExprTD ((Const c) :*: (Const c'))     = show c ++ "*" ++ show c'
+showExprTD ((Id)      :*: (Const c))      = show c ++ "*x"
+showExprTD ((Const c) :*: (Id))           = show c ++ "*x"
+showExprTD ((Const c) :*: e)              = show c ++ "*(" ++ show e ++ ")"
+showExprTD (Id        :*: e)              = "x*(" ++ show e ++ ")"
+showExprTD (e         :*: (Const c))      = show c ++ "*(" ++ show e ++ ")"
+showExprTD (e         :*: Id)             = "x*(" ++ show e ++ ")"
+showExprTD (e         :*: e')             = "(" ++ show e ++ ")*(" ++ show e' ++ ")"
+-- Division
+showExprTD ((Id)      :/: (Id))           = "x/x"
+showExprTD ((Const c) :/: (Const c'))     = show c ++ "/" ++ show c'
+showExprTD ((Id)      :/: (Const c))      = "x/" ++ show c
+showExprTD ((Const c) :/: (Id))           = show c ++ "/x"
+showExprTD ((Const c) :/: e)              = show c ++ "/(" ++ show e ++ ")"
+showExprTD (Id        :/: e)              = "x/(" ++ show e ++ ")"
+showExprTD (e         :/: (Const c))      = "(" ++ show e ++ ")/" ++ show c
+showExprTD (e         :/: Id)             = "(" ++ show e ++ ")/x"
+showExprTD (e         :/: e')             = "(" ++ show e ++ ")/(" ++ show e' ++ ")"
+-- Power of
+showExprTD ((Id)      :**: (Id))          = "x^x"
+showExprTD ((Const c) :**: (Const c'))    = show c ++ "^" ++ show c'
+showExprTD ((Id)      :**: (Const c))     = "x^" ++ show c
+showExprTD ((Const c) :**: (Id))          = show c ++ "^x"
+showExprTD ((Const c) :**: e)             = show c ++ "^(" ++ show e ++ ")"
+showExprTD (Id        :**: e)             = "x^(" ++ show e ++ ")"
+showExprTD (e         :**: (Const c))     = "(" ++ show e ++ ")^" ++ show c
+showExprTD (e         :**: Id)            = "(" ++ show e ++ ")^x"
+showExprTD (e         :**: e')            = "(" ++ show e ++ ")^(" ++ show e' ++ ")"
+-- Rest
+showExprTD (LogBase e e')                 = "log_" ++ show e ++ "(" ++ show e' ++")"
+showExprTD (Neg e)                        = "-(" ++ show e ++ ")"
+showExprTD (Abs e)                        = "|" ++ show e ++ "|"
+showExprTD (Exp e)                        = "e^(" ++ show e ++ ")"
+showExprTD (Sqrt e)                       = "sqrt(" ++ show e ++ ")"
+showExprTD (Log e)                        = "log(" ++ show e ++ ")"
+showExprTD (Sin e)                        = "sin(" ++ show e ++ ")"
+showExprTD (Cos e)                        = "cos(" ++ show e ++ ")"
+showExprTD (Tan e)                        = "tan(" ++ show e ++ ")"
+showExprTD (Signum e)                     = "sign(" ++ show e ++ ")"
+
 -- | Naive printing of time domain expression.
 instance Show ExprTD where
-    show Id                             = "x"
-    show (Const c)                      = show c
-    show ((Id)      :+: (Id))           = "x+x"
-    show ((Const c) :+: (Const c'))     = show c ++ "+" ++ show c'
-    show ((Id)      :+: (Const c))      = "x + " ++ show c
-    show ((Const c) :+: (Id))           = show c ++ " + x"
-    show ((Const c) :+: e)              = show c ++ " + (" ++ show e ++ ")"
-    show (Id        :+: e)              = "x + (" ++ show e ++ ")"
-    show (e         :+: (Const c))      = "(" ++ show e ++ ") + " ++ show c
-    show (e         :+: Id)             = "(" ++ show e ++ ") + x"
-    show (e         :+: e')             = "(" ++ show e ++ ") + (" ++ show e' ++ ")"
+    show = showExprTD
 
-    show ((Id)      :-: (Id))           = "x - x"
-    show ((Const c) :-: (Const c'))     = show c ++ "-" ++ show c'
-    show ((Id)      :-: (Const c))      = "x - " ++ show c
-    show ((Const c) :-: (Id))           = show c ++ "+ -"
-    show ((Const c) :-: e)              = show c ++ " - (" ++ show e ++ ")"
-    show (Id        :-: e)              = "x - (" ++ show e ++ ")"
-    show (e         :-: (Const c))      = "(" ++ show e ++ ") - " ++ show c
-    show (e         :-: Id)             = "(" ++ show e ++ ") - x"
-    show (e         :-: e')             = "(" ++ show e ++ ") - (" ++ show e' ++ ")"
-
-    show ((Id)      :*: (Id))           = "x*x"
-    show ((Const c) :*: (Const c'))     = show c ++ "*" ++ show c'
-    show ((Id)      :*: (Const c))      = show c ++ "*x"
-    show ((Const c) :*: (Id))           = show c ++ "*x"
-    show ((Const c) :*: e)              = show c ++ "*(" ++ show e ++ ")"
-    show (Id        :*: e)              = "x*(" ++ show e ++ ")"
-    show (e         :*: (Const c))      = show c ++ "*(" ++ show e ++ ")"
-    show (e         :*: Id)             = "x*(" ++ show e ++ ")"
-    show (e         :*: e')             = "(" ++ show e ++ ")*(" ++ show e' ++ ")"
-
-    show ((Id)      :/: (Id))           = "x/x"
-    show ((Const c) :/: (Const c'))     = show c ++ "/" ++ show c'
-    show ((Id)      :/: (Const c))      = "x/" ++ show c
-    show ((Const c) :/: (Id))           = show c ++ "/x"
-    show ((Const c) :/: e)              = show c ++ "/(" ++ show e ++ ")"
-    show (Id        :/: e)              = "x/(" ++ show e ++ ")"
-    show (e         :/: (Const c))      = "(" ++ show e ++ ")/" ++ show c
-    show (e         :/: Id)             = "(" ++ show e ++ ")/x"
-    show (e         :/: e')             = "(" ++ show e ++ ")/(" ++ show e' ++ ")"
-
-    show ((Id)      :**: (Id))          = "x^x"
-    show ((Const c) :**: (Const c'))    = show c ++ "^" ++ show c'
-    show ((Id)      :**: (Const c))     = "x^" ++ show c
-    show ((Const c) :**: (Id))          = show c ++ "^x"
-    show ((Const c) :**: e)             = show c ++ "^(" ++ show e ++ ")"
-    show (Id        :**: e)             = "x^(" ++ show e ++ ")"
-    show (e         :**: (Const c))     = "(" ++ show e ++ ")^" ++ show c
-    show (e         :**: Id)            = "(" ++ show e ++ ")^x"
-    show (e         :**: e')            = "(" ++ show e ++ ")^(" ++ show e' ++ ")"
-
-    show (LogBase e e')                 = "log_" ++ show e ++ "(" ++ show e' ++")"
-    show (Neg e)                        = "-(" ++ show e ++ ")"
-    show (Abs e)                        = "|" ++ show e ++ "|"
-    show (Exp e)                        = "e^(" ++ show e ++ ")"
-    show (Sqrt e)                       = "sqrt(" ++ show e ++ ")"
-    show (Log e)                        = "log(" ++ show e ++ ")"
-    show (Sin e)                        = "sin(" ++ show e ++ ")"
-    show (Cos e)                        = "cos(" ++ show e ++ ")"
-    show (Tan e)                        = "tan(" ++ show e ++ ")"
-    show (Signum e)                     = "sign(" ++ show e ++ ")"
-
-
-idE :: (Num a) => Expr a
+idE :: Expr a
 idE = Id
 
 type Complex = Integer
