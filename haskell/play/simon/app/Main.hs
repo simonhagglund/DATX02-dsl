@@ -11,8 +11,8 @@ main :: IO ()
 main = someFunc
 
 data Expr s where -- Syntax of expression DSL.
-    Id          :: Expr a            -- Identity, i.e x in math (f(x) = x)
-    Const       :: a -> Expr a       -- Constant function f(x) = 1
+    Pow         :: Integer -> Expr s -- Identity Pow 1, i.e x in math (f(x) = x)
+    Const       :: s -> Expr s       -- Constant function f(x) = 1
     (:+:)       :: Expr s -> Expr s -> Expr s   -- Addition : x+y
     (:-:)       :: Expr s -> Expr s -> Expr s   -- Subtraction : x-y
     (:*:)       :: Expr s -> Expr s -> Expr s   -- Multiplication : x*y
@@ -29,58 +29,81 @@ data Expr s where -- Syntax of expression DSL.
     Cos         :: Expr s -> Expr s             -- f(x) = cos(x)
     Tan         :: Expr s -> Expr s             -- f(x) = tan(x)
 
+-- | Maybe multiplication can be a functor over expr.
+instance Functor Expr where
+    fmap f (Pow n)      = Pow n
+    fmap f (Const c)    = Const (f c)
+    fmap f (e :+: e')   = fmap f e :+: fmap f e'
+    fmap f (e :*: e')   = fmap f e :*: fmap f e'
+    fmap f (e :-: e')   = fmap f e :-: fmap f e'
+    fmap f (e :/: e')   = fmap f e :/: fmap f e'
+    fmap f e@(_ :**: _) = undefined -- Have nothing here.
+
 showExprTD :: ExprTD -> String
-showExprTD Id                             = "x"
+showExprTD (Pow 1)                        = "x"
+showExprTD (Pow n)                        = "x^" ++ show n
 showExprTD (Const c)                      = show c
 -- Addtion
-showExprTD ((Id)      :+: (Id))           = "x+x"
+showExprTD ((Pow 1)   :+: (Pow 1))           = "x+x"
 showExprTD ((Const c) :+: (Const c'))     = show c ++ "+" ++ show c'
-showExprTD ((Id)      :+: (Const c))      = "x + " ++ show c
-showExprTD ((Const c) :+: (Id))           = show c ++ " + x"
+showExprTD ((Pow 1)      :+: (Const c))      = "x + " ++ show c
+showExprTD ((Const c) :+: (Pow 1))           = show c ++ " + x"
 showExprTD ((Const c) :+: e)              = show c ++ " + (" ++ show e ++ ")"
-showExprTD (Id        :+: e)              = "x + (" ++ show e ++ ")"
+showExprTD (Pow 1        :+: e)              = "x + (" ++ show e ++ ")"
 showExprTD (e         :+: (Const c))      = "(" ++ show e ++ ") + " ++ show c
-showExprTD (e         :+: Id)             = "(" ++ show e ++ ") + x"
+showExprTD (e         :+: Pow 1)             = "(" ++ show e ++ ") + x"
 showExprTD (e         :+: e')             = "(" ++ show e ++ ") + (" ++ show e' ++ ")"
 -- Subtraction
-showExprTD ((Id)      :-: (Id))           = "x - x"
+showExprTD ((Pow 1)      :-: (Pow 1))           = "x - x"
 showExprTD ((Const c) :-: (Const c'))     = show c ++ "-" ++ show c'
-showExprTD ((Id)      :-: (Const c))      = "x - " ++ show c
-showExprTD ((Const c) :-: (Id))           = show c ++ "+ -"
+showExprTD ((Pow 1)      :-: (Const c))      = "x - " ++ show c
+showExprTD ((Const c) :-: (Pow 1))           = show c ++ "+ -"
 showExprTD ((Const c) :-: e)              = show c ++ " - (" ++ show e ++ ")"
-showExprTD (Id        :-: e)              = "x - (" ++ show e ++ ")"
+showExprTD (Pow 1        :-: e)              = "x - (" ++ show e ++ ")"
 showExprTD (e         :-: (Const c))      = "(" ++ show e ++ ") - " ++ show c
-showExprTD (e         :-: Id)             = "(" ++ show e ++ ") - x"
+showExprTD (e         :-: Pow 1)             = "(" ++ show e ++ ") - x"
 showExprTD (e         :-: e')             = "(" ++ show e ++ ") - (" ++ show e' ++ ")"
 -- Multiplication
-showExprTD ((Id)      :*: (Id))           = "x*x"
+showExprTD ((Pow 1)      :*: (Pow 1))           = "x*x"
 showExprTD ((Const c) :*: (Const c'))     = show c ++ "*" ++ show c'
-showExprTD ((Id)      :*: (Const c))      = show c ++ "*x"
-showExprTD ((Const c) :*: (Id))           = show c ++ "*x"
+showExprTD ((Pow 1)      :*: (Const c))   = show c ++ "*x"
+showExprTD ((Const c) :*: (Pow 1))        = show c ++ "*x"
+showExprTD ((Const c) :*: (Pow n))        = undefined
 showExprTD ((Const c) :*: e)              = show c ++ "*(" ++ show e ++ ")"
-showExprTD (Id        :*: e)              = "x*(" ++ show e ++ ")"
+showExprTD ((Pow 1)   :*: e)              = "x*(" ++ show e ++ ")"
+showExprTD ((Pow n)   :*: e)              = undefined
 showExprTD (e         :*: (Const c))      = show c ++ "*(" ++ show e ++ ")"
-showExprTD (e         :*: Id)             = "x*(" ++ show e ++ ")"
+showExprTD (e         :*: Pow 1)             = "x*(" ++ show e ++ ")"
 showExprTD (e         :*: e')             = "(" ++ show e ++ ")*(" ++ show e' ++ ")"
 -- Division
-showExprTD ((Id)      :/: (Id))           = "x/x"
+showExprTD ((Pow 1)   :/: (Pow 1))        = "x/x"
+showExprTD ((Pow n)   :/: (Pow n'))       = undefined
 showExprTD ((Const c) :/: (Const c'))     = show c ++ "/" ++ show c'
-showExprTD ((Id)      :/: (Const c))      = "x/" ++ show c
-showExprTD ((Const c) :/: (Id))           = show c ++ "/x"
+showExprTD ((Pow 1)   :/: (Const c))      = "x/" ++ show c
+showExprTD ((Pow n)   :/: (Const c))      = undefined
+showExprTD ((Const c) :/: (Pow 1))        = show c ++ "/x"
+showExprTD ((Const c) :/: (Pow n))        = undefined
 showExprTD ((Const c) :/: e)              = show c ++ "/(" ++ show e ++ ")"
-showExprTD (Id        :/: e)              = "x/(" ++ show e ++ ")"
+showExprTD ((Pow 1)   :/: e)              = "x/(" ++ show e ++ ")"
+showExprTD ((Pow n)   :/: e)              = undefined
 showExprTD (e         :/: (Const c))      = "(" ++ show e ++ ")/" ++ show c
-showExprTD (e         :/: Id)             = "(" ++ show e ++ ")/x"
+showExprTD (e         :/: (Pow 1))        = "(" ++ show e ++ ")/x"
+showExprTD (e         :/: (Pow n))        = undefined
 showExprTD (e         :/: e')             = "(" ++ show e ++ ")/(" ++ show e' ++ ")"
 -- Power of
-showExprTD ((Id)      :**: (Id))          = "x^x"
+showExprTD ((Pow 1)   :**: (Pow 1))       = "x^x"
+showExprTD ((Pow n)   :**: (Pow n'))      = undefined
 showExprTD ((Const c) :**: (Const c'))    = show c ++ "^" ++ show c'
-showExprTD ((Id)      :**: (Const c))     = "x^" ++ show c
-showExprTD ((Const c) :**: (Id))          = show c ++ "^x"
+showExprTD ((Pow 1)   :**: (Const c))     = "x^" ++ show c
+showExprTD ((Pow n)   :**: (Const c))     = "x^(" ++ show n ++ "(" ++ show c ++ ")"
+showExprTD ((Const c) :**: (Pow 1))       = show c ++ "^x"
+showExprTD ((Const c) :**: (Pow n))       = show c ++ "^x^" ++ show n
 showExprTD ((Const c) :**: e)             = show c ++ "^(" ++ show e ++ ")"
-showExprTD (Id        :**: e)             = "x^(" ++ show e ++ ")"
+showExprTD ((Pow 1)   :**: e)             = "x^(" ++ show e ++ ")"
+showExprTD ((Pow n)   :**: e)             = "x^(" ++ show n ++ "(" ++ show e ++ "))"
 showExprTD (e         :**: (Const c))     = "(" ++ show e ++ ")^" ++ show c
-showExprTD (e         :**: Id)            = "(" ++ show e ++ ")^x"
+showExprTD (e         :**: (Pow 1))       = "(" ++ show e ++ ")^x"
+showExprTD (e         :**: (Pow n))       = "(" ++ show e ++ ")^(x^" ++ show n ++ ")"
 showExprTD (e         :**: e')            = "(" ++ show e ++ ")^(" ++ show e' ++ ")"
 -- Rest
 showExprTD (LogBase e e')                 = "log_" ++ show e ++ "(" ++ show e' ++")"
@@ -98,8 +121,8 @@ showExprTD (Signum e)                     = "sign(" ++ show e ++ ")"
 instance Show ExprTD where
     show = showExprTD
 
-idE :: Expr a
-idE = Id
+idE :: ExprTD
+idE = (Const 1) :*: (Pow 1)
 
 type Complex = Integer
 
@@ -108,13 +131,14 @@ type ExprFD = Expr Complex  -- Expression in frequency domain.
 
 -- | Enables numerical mathematical notation like f(x) = g(x) + h(x)
 instance Num ExprTD where
-    (+)         = (:+:)
-    (-)         = (:-:)
-    (*)         = (:*:)
-    negate      = Neg
-    abs         = Abs
-    signum      = Signum
-    fromInteger = Const . fromIntegral
+    (+)             = (:+:)
+    (-)             = (:-:)
+    (*) (Pow n) e   = e :*: (Pow n)
+    (*) e e'        = e :*: e'
+    negate          = Neg
+    abs             = Abs
+    signum          = Signum
+    fromInteger     = Const . fromIntegral
 
 -- | Enables fractional mathematical notation like f(x) = g(x) / h(x)
 instance Fractional ExprTD where
@@ -124,24 +148,24 @@ instance Fractional ExprTD where
 
 -- | Enables floating mathematical notation like f(x) = 2*pi g(x) ^ h(x) + sin (k(x))
 instance Floating ExprTD where
-  pi = Const pi
-  exp = Exp
-  log = Log
-  sqrt = Sqrt
-  (**) = (:**:)
-  logBase = LogBase
-  sin = Sin
-  cos = Cos
-  tan = Tan
-  asin = undefined
-  acos = undefined
-  atan = undefined
-  sinh = undefined
-  cosh = undefined
-  tanh = undefined
-  asinh = undefined
-  acosh = undefined
-  atanh = undefined
+  pi            = Const pi
+  exp           = Exp
+  log           = Log
+  sqrt          = Sqrt
+  (**) e e'     = e :**: e'
+  logBase       = LogBase
+  sin           = Sin
+  cos           = Cos
+  tan           = Tan
+  asin          = undefined
+  acos          = undefined
+  atan          = undefined
+  sinh          = undefined
+  cosh          = undefined
+  tanh          = undefined
+  asinh         = undefined
+  acosh         = undefined
+  atanh         = undefined
 
 
 -- | Like should probably use lookup tables like in the course.
@@ -152,18 +176,72 @@ transform = undefined
 toPartial :: ExprFD -> Maybe ExprFD
 toPartial = undefined
 
+simplifyBrackets = undefined
+
 -- | Simplifies an expression.
-simplify :: Expr s -> Expr s -- Simplify doubles is not intuitive.
-simplify = undefined
+--simplifyExpr :: Fractional (Expr a) => Expr a -> Expr a
+simplifyExpr (Pow 1)                    = Pow 1
+simplifyExpr (Const c)                  = Const c
+simplifyExpr e@((Pow n) :+: (Pow n'))
+    | n == n' = 2 * (Pow n)
+    | otherwise = e
+simplifyExpr ((Const c) :+: (Const c')) = Const (c + c')
+simplifyExpr (e :+: e')                 = simplifyExpr e + simplifyExpr e'
+simplifyExpr ((Const c) :-: (Const c')) = Const (c - c')
+simplifyExpr (e :-: e')                 = simplifyExpr e - simplifyExpr e'
+simplifyExpr ((Pow n) :*: (Pow n'))      = Pow (n + n')
+simplifyExpr ((Const 0) :*: _)          = 0
+simplifyExpr (_ :*: (Const 0))          = 0
+simplifyExpr e@((Const c) :*: (Pow n))  = e
+simplifyExpr e@((Pow n) :*: (Const c))  = e
+simplifyExpr ((Const c) :*: e')         = fmap (*c) (simplifyExpr e')
+simplifyExpr (e :*: (Const c))          = fmap (*c) (simplifyExpr e)
+simplifyExpr (e :*: e')                 = simplifyExpr e * simplifyExpr e'
+simplifyExpr ((Const 0) :**: (Const 0)) = error "0^0 is not defined."
+simplifyExpr (_ :**: (Const 0))         = 1
+simplifyExpr ((Const 0) :**: _)         = 0
+simplifyExpr (e :**: e')                = undefined
+simplifyExpr (LogBase e e')             = undefined
+simplifyExpr (Neg e)                    = undefined
+simplifyExpr (Abs e)                    = undefined
+simplifyExpr (Signum e)                 = undefined
+simplifyExpr (Exp e)                    = undefined
+simplifyExpr (Cos e)                    = undefined
+simplifyExpr (Sin e)                    = undefined
+simplifyExpr (Tan e)                    = undefined
+simplifyExpr (Sqrt e)                   = undefined
+simplifyExpr (Log e)                    = undefined
+
+--deriveExpr :: Fractional (Expr a) => Expr a -> Expr a
+deriveExpr (Pow 1)        = Const 1
+deriveExpr (Pow n)        = undefined -- n * (Pow (n-1))
+deriveExpr (Const c)      = Const c
+deriveExpr (e :/: e')     = (e * (deriveExpr e') - (deriveExpr e) * e') / (e'^2)
+deriveExpr (e :+: e')     = (deriveExpr e) + (deriveExpr e')
+deriveExpr (e :-: e')     = (deriveExpr e) - (deriveExpr e')
+deriveExpr (e :*: e')     = (e * deriveExpr e' + deriveExpr e * e')
+deriveExpr (e :**: e')    = undefined
+deriveExpr (LogBase e e') = undefined
+deriveExpr (Neg e)        = undefined
+deriveExpr (Abs e)        = undefined
+deriveExpr (Signum e)     = undefined
+deriveExpr (Exp e)        = undefined
+deriveExpr (Cos e)        = undefined
+deriveExpr (Sin e)        = undefined
+deriveExpr (Tan e)        = undefined
+deriveExpr (Sqrt e)       = undefined
+deriveExpr (Log e)        = undefined
 
 -- | Semantics of DSL. Evaluates a expression, returning a new function.
 evalExpr :: Floating t => Expr t -> t -> t
-evalExpr Id             = id
+evalExpr (Pow 1)        = id
+evalExpr (Pow n)        = \s -> s ** fromInteger n
 evalExpr (Const c)      = const c
 evalExpr (e :/: e')     = \s -> ((evalExpr e) s) / ((evalExpr e') s)
 evalExpr (e :+: e')     = \s -> (evalExpr e) s + (evalExpr e') s
 evalExpr (e :-: e')     = \s -> (evalExpr e) s - (evalExpr e') s
 evalExpr (e :*: e')     = \s -> (evalExpr e) s * (evalExpr e') s
+evalExpr (e :**: e')    = \s -> (evalExpr e) s ** (evalExpr e') s
 evalExpr (LogBase e e') = \s -> logBase (evalExpr e s) (evalExpr e' s)
 evalExpr (Neg e)        = negate . evalExpr e
 evalExpr (Abs e)        = abs . evalExpr e
@@ -177,7 +255,7 @@ evalExpr (Log e)        = log . evalExpr e
 
 -- | f(t) = 2*t + (t +2)*3
 example :: ExprTD
-example = 2 * idE + (2 + idE)*3
+example = 2 * idE + (2 + idE * idE)*3
 
 -- | f(t) = 2*pi
 example1 :: ExprTD
