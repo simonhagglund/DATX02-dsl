@@ -13,6 +13,7 @@ data Expr s where
   X :: Expr s
   E :: Expr s
   Const :: s -> Expr s
+  Pow :: Int -> Expr s
   (:+:) :: Expr s -> Expr s -> Expr s
   (:-:) :: Expr s -> Expr s -> Expr s
   (:*:) :: Expr s -> Expr s -> Expr s
@@ -21,6 +22,7 @@ data Expr s where
   Dirac :: Expr s -> Expr s
   HStep :: Expr s -> Expr s
   Log   :: Expr s -> Expr s
+  Recip :: Expr s -> Expr s
   deriving (Show)
 
 newtype TDom = T Double
@@ -30,14 +32,10 @@ newtype SDom = S Double
   deriving (Num)
 
 
--- rule
--- Expr s
--- [a] ..
--- fmap show [1..3]
--- fmap show (Const 1 :+: Const 2 :+: Const 3) = (Const "1" :+: )
--- fmap show [1..3]
--- foldl (\b -> a) b [a]
-
+instance Show TDom where
+  show (T t) = show t ++ "t"
+instance Show SDom where
+  show (S s) = show s ++ "s"
 
 instance Functor Expr where
   fmap f (a :+: b) = fmap f a :+: fmap f b
@@ -45,10 +43,10 @@ instance Functor Expr where
   fmap f (a :-: b) = fmap f a :-: fmap f b
   fmap f (a :/: b) = fmap f a :/: fmap f b
   fmap f (a :^: b) = fmap f a :^: fmap f b
-  fmap f (Const x) = Const (fmap f x)
+  --fmap f (Const x) = Const (fmap f x)
   fmap f (Dirac x) = Dirac (fmap f x)
   fmap f (HStep x) = HStep (fmap f x)
-  fmap f a         = a
+  --fmap f a         = a
 
 
 neg :: Num s => Expr s -> Expr s
@@ -86,3 +84,50 @@ der (a :^: b) = a :^: b :*: ((b :*: der a :/: a) :+: (Log a :*: der b))
       (:*:) -> "*"
       (:/:) -> "/"
       (:^:) -> "^"-}
+
+
+
+
+data TransfFunc s where
+  TransfFunc :: String -> Expr s -> TransfFunc s
+
+tf1, tf2 :: TransfFunc SDom
+tf1 = TransfFunc "F" (Recip (Pow 1 :+: Pow 2))
+tf2 = TransfFunc "G" (Recip (Pow 2))
+
+ex1 :: Expr TDom
+ex1 = Const 1
+ex2 = neg (E :^: neg X)
+
+
+evalExpr :: (Num s, Fractional s, Floating s) => Expr s -> s -> s
+evalExpr e x = case e of
+  (Const i) -> i
+  a :+: b   -> evalExpr a x + evalExpr b x
+  a :*: b   -> evalExpr a x * evalExpr b x
+  a :-: b   -> evalExpr a x - evalExpr b x
+  a :/: b   -> evalExpr a x / evalExpr b x
+  a :^: b   -> evalExpr a x ** evalExpr b x
+  E         -> fromRational 2.71828
+  X         -> x
+  Pow n     -> x ** fromIntegral n
+  Recip a   -> recip (evalExpr a x)
+  Log a     -> log (evalExpr a x)
+
+instance Num s => Num (Expr s) where
+  (+) = (:+:)
+  (-) = (:-:)
+  (*) = (:*:)
+  fromInteger = Const . fromInteger
+  negate = neg
+  abs    = undefined
+  signum = undefined
+
+instance Fractional s => Fractional (Expr s) where
+  (/) = (:/:)
+  recip = Recip
+  fromRational = Const . fromRational
+
+instance Floating s => Floating (Expr s) where
+  pi = Const pi
+  exp = (E :^:)
