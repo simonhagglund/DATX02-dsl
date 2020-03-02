@@ -10,6 +10,17 @@ import Lib
 main :: IO ()
 main = someFunc
 
+-- | Didiktiska implimplikatiioner.
+-- hitta balanser.
+-- studie nämden,
+-- ganska dåligt på nyttogörande aspekten. tenderas att glömas bort.
+
+
+-- f(x) = 2 + x
+-- f(x) = 2 + x
+
+--f(x, const(2)) = const(2) + x
+
 data Expr s where -- Syntax of expression DSL.
     Pow         :: Integer -> Expr s            -- Identity Pow 1, i.e x in math (f(x) = x)
     Const       :: s -> Expr s                  -- Constant function f(x) = 1
@@ -29,7 +40,12 @@ data Expr s where -- Syntax of expression DSL.
     Cos         :: Expr s -> Expr s             -- f(x) = cos(x)
     Tan         :: Expr s -> Expr s             -- f(x) = tan(x)
     D           :: Expr s -> Expr s             -- f'(x)
+    Fun         :: String -> Expr s -> Expr s
         --deriving (Show)
+
+-- Y(s) = U(s) * H(s)
+-- hitta h
+-- Y(s) / U(s) = H(s)
 
 instance Show ExprTD where
     show = showExprTD
@@ -43,6 +59,11 @@ instance Functor Expr where
     fmap f (e :-: e')   = fmap f e :-: fmap f e'
     fmap f (e :/: e')   = fmap f e :/: fmap f e'
     fmap f e@(_ :**: _) = undefined -- Have nothing here.
+
+instance Applicative Expr where
+    pure = Const
+    (Const f) <*> e = fmap f e
+
 
 -- | Naive printing of time domain expression.
 showExprTD :: ExprTD -> String
@@ -212,6 +233,7 @@ shift (Const s :+: e)                               = Const s   :+: shift e
 shift (e :+: Const s)                               = Const s   :+: shift e
 shift ((Const s :+: e) :+: e'@(Const _ :*: Pow _))  = Const s   :+: shift (e :+: e')
 shift ((Const s :+: e) :+: e')                      = Const s   :+: e' :+: e
+shift ((e' :+: e'') :+: e''')                       = shift (e' :+: (e'' :+: e'''))
 shift (Pow n :+: Pow n')    | n > n'                = Pow n'    :+: Pow n
                             | otherwise             = Pow n     :+: Pow n'
 shift e                                             = e
@@ -295,7 +317,7 @@ evalExpr (Log e)        = log . evalExpr e
 
 -- | f(t) = 2(2 + 2(2 + x)) + 2 + 2x
 example :: ExprTD
-example = 2*(2 + 2*(2 + idE)) + 2
+example = 2*(2 + 2*(2 + idE)) + 2 + idE
 
 -- | f(t) = 2x + 3(2 + x^2)
 example1 :: ExprTD
