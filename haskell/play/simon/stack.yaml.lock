@@ -3,7 +3,49 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: cairo-0.13.8.0@sha256:9b64a376ebaa4f153bba5866a32291fd4bed48147009cce9158ce6533928eba8,4075
+    pantry-tree:
+      size: 2830
+      sha256: 07aeb4b5eaa1d8201f67f4b8011aaf182ceb4e558066e59d482485fc02895994
+  original:
+    hackage: cairo-0.13.8.0@sha256:9b64a376ebaa4f153bba5866a32291fd4bed48147009cce9158ce6533928eba8,4075
+- completed:
+    hackage: pango-0.13.8.0@sha256:690149ea2efb03c783937b69a5ec6ac854806146fd760e28e800634a6c2243c1,3897
+    pantry-tree:
+      size: 1506
+      sha256: 328fc8a2e574379bfbc9b710270d3f6be7ed2c9bf5e10477a3256c0d2d362024
+  original:
+    hackage: pango-0.13.8.0@sha256:690149ea2efb03c783937b69a5ec6ac854806146fd760e28e800634a6c2243c1,3897
+- completed:
+    hackage: glib-0.13.8.0@sha256:97698bd054bad38756f3ef0220d7684f72e42660d261e9b118aa73419ce9207d,3136
+    pantry-tree:
+      size: 1625
+      sha256: 1a9d5731f5a7e40da0e5a25e25fea9da259c720e8c0263da1c4836488b60b4c1
+  original:
+    hackage: glib-0.13.8.0@sha256:97698bd054bad38756f3ef0220d7684f72e42660d261e9b118aa73419ce9207d,3136
+- completed:
+    hackage: gtk2hs-buildtools-0.13.8.0@sha256:132f38155fc677430a47ea750918973161c876fb6f281d342ac2f07eb99229ce,5238
+    pantry-tree:
+      size: 3588
+      sha256: 4552e3c0f2ef0f16285c38898d7e2b6aeea67d4e37cd203b0c82f70592096c45
+  original:
+    hackage: gtk2hs-buildtools-0.13.8.0@sha256:132f38155fc677430a47ea750918973161c876fb6f281d342ac2f07eb99229ce,5238
+- completed:
+    hackage: plots-0.1.1.2@sha256:01f2ba7ca0c1e00b5231a81b44a3b8b9fd21b49bc333ff4cef880e31c5332935,2034
+    pantry-tree:
+      size: 5256
+      sha256: 7fdbbcfdef97294ccf6b876224f1b7e42227e8e9c9b72c000814ebce78ffbd9f
+  original:
+    hackage: plots-0.1.1.2@sha256:01f2ba7ca0c1e00b5231a81b44a3b8b9fd21b49bc333ff4cef880e31c5332935,2034
+- completed:
+    hackage: Chart-cairo-1.9.3@sha256:05cecda5743954e43c8eabea788e0c19300c305346febee727ce578f69e30748,879
+    pantry-tree:
+      size: 238
+      sha256: e00876230cd7553283f0cf6e437709c6e0e81f7166d20b251329ae76ff7d2462
+  original:
+    hackage: Chart-cairo-1.9.3@sha256:05cecda5743954e43c8eabea788e0c19300c305346febee727ce578f69e30748,879
 snapshots:
 - completed:
     size: 524164

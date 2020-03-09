@@ -39,8 +39,6 @@ data Expr s where -- Syntax of expression DSL.
     Sin         :: Expr s -> Expr s             -- f(x) = sin(x)
     Cos         :: Expr s -> Expr s             -- f(x) = cos(x)
     Tan         :: Expr s -> Expr s             -- f(x) = tan(x)
-    D           :: Expr s -> Expr s             -- f'(x)
-    Fun         :: String -> Expr s -> Expr s
         --deriving (Show)
 
 -- Y(s) = U(s) * H(s)

@@ -47,7 +47,7 @@ ex2 is not a base case and partFacDecom should return \frac{A}{s+1} + \frac{B}{s
 \begin{code}
 ex2RHS :: [Fraction]
 ex2RHS =
-    [ (Var 'A', (Var 's' :+: Const 2)))
+    [ (Var 'A', (Var 's' :+: Const 2))
     , (Var 'B', (Var 's' :+: Const 2) :*: (Var 's' :+: Const 2))
     ]
 \end{code}
