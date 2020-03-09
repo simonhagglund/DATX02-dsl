@@ -3,7 +3,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Main where
+import           Control.Invertible.BiArrow (invert)
+import           Control.Invertible.Functor as BF
+import qualified Data.Invertible.Prelude    as DIP
 import           Lib
+import           Prelude                    as P
 
 main :: IO ()
 main = putStrLn "Hej"
@@ -19,6 +23,7 @@ data Expr s where
   (:*:) :: Expr s -> Expr s -> Expr s
   (:/:) :: Expr s -> Expr s -> Expr s
   (:^:) :: Expr s -> Expr s -> Expr s
+  (:~:) :: Expr s -> Expr s -> Expr s -- Convolution
   Dirac :: Expr s -> Expr s
   HStep :: Expr s -> Expr s
   Log   :: Expr s -> Expr s
@@ -37,15 +42,15 @@ instance Show TDom where
 instance Show SDom where
   show (S s) = show s ++ "s"
 
-instance Functor Expr where
-  fmap f (a :+: b) = fmap f a :+: fmap f b
-  fmap f (a :*: b) = fmap f a :*: fmap f b
-  fmap f (a :-: b) = fmap f a :-: fmap f b
-  fmap f (a :/: b) = fmap f a :/: fmap f b
-  fmap f (a :^: b) = fmap f a :^: fmap f b
+instance P.Functor Expr where
+  fmap f (a :+: b) = fmap f a :+: fmap f b where fmap = P.fmap
+  fmap f (a :*: b) = fmap f a :*: fmap f b where fmap = P.fmap
+  fmap f (a :-: b) = fmap f a :-: fmap f b where fmap = P.fmap
+  fmap f (a :/: b) = fmap f a :/: fmap f b where fmap = P.fmap
+  fmap f (a :^: b) = fmap f a :^: fmap f b where fmap = P.fmap
   --fmap f (Const x) = Const (fmap f x)
-  fmap f (Dirac x) = Dirac (fmap f x)
-  fmap f (HStep x) = HStep (fmap f x)
+  fmap f (Dirac x) = Dirac (fmap f x) where fmap = P.fmap
+  fmap f (HStep x) = HStep (fmap f x) where fmap = P.fmap
   --fmap f a         = a
 
 
@@ -63,6 +68,7 @@ laplace = laplace' . fmap transform where
   laplace' (E :^: (a :*: X)) = (X :-: a) :^: Const (-1)
   laplace' (a :+: b)         = laplace' a :+: laplace' b
   laplace' (Const x :*: a)   = Const x :*: laplace' a
+  fmap = P.fmap
 
 
 der :: Num n => Expr n -> Expr n
@@ -131,3 +137,20 @@ instance Fractional s => Fractional (Expr s) where
 instance Floating s => Floating (Expr s) where
   pi = Const pi
   exp = (E :^:)
+
+instance BF.Functor Expr where
+  fmap bf (a :+: b) = fmap bf a :+: fmap bf b where fmap = BF.fmap
+  fmap bf (a :~: b) = fmap bf a :*: fmap bf b where fmap = BF.fmap
+  fmap bf X         = Recip $ Pow 2
+
+ex3 = X :~: X
+
+-- Conclusion: Laplace cannot be easily implemented in this way as a bijective functor
+{-
+The bijection is applied to the mapped function itself, and not the functor
+mapping. The following is possible
+invert DIP.id BF.<$> ex3
+i.e. inverting a function (in this case the bijective id function) and mapping
+it on the functor expression ex3. The :~:->:+: mapping cannot be reversed this
+way. There may be other class structures possible to try.
+-}
