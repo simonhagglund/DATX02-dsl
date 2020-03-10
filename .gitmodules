@@ -1,3 +1,6 @@
 [submodule "planning-report"]
 	path = planning-report
 	url = git@github.com:simonhagglund/Planeringsrapport.git
+[submodule "product_overleaf"]
+	path = product_overleaf
+	url = git@github.com:simonhagglund/DATX02-dsl-produkt.git
