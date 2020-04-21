@@ -5,6 +5,7 @@
 
 \begin{code}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module TransferFunctions where
 --import Lib
@@ -28,7 +29,7 @@ constant coefficients:
 data LCDE a where
   LCDE :: Num a => ([a],[a]) -> LCDE a
 
-lcde = LCDE ([9,6,1], [3,2::Fractional a => a])
+lcde = LCDE ([9,6,1], [3,2]) :: Fractional a => LCDE a
 \end{code} % Further explanation for list representation (if not provided elseware)
 The type consists of a two lists, representing each side of the equation. The
 leftmost (first) digit in each list represents the coefficient of the least
@@ -58,13 +59,14 @@ C = \sum\limits^{}_{n=0}{c_n s^n f(0)}
 % Can we make this not be interpreted by ghci and still have it displayed as code?
 %\begin{code}
 data Transformed a where
-  Transformed :: Num a => ([a],[a],[a]) -> [a] -> Transformed a
+  Transformed :: Num a => ([a],[a]) -> [a] -> Transformed a
 
-laplace :: Num a => LCDE a -> [a] -> Transformed a
-laplace (LCDE (lhs, rhs)) ic = transformed where
-  transformed = Transformed (lhs, rhs, zipWith (-) lc rc)
-  lc = [zipWith (*) ic (drop n $ reverse (tail lhs)) | n <- [0..len lhs-2]] % WIP. Probably doesn't work yet. Haven't had the time to check it
-  rc = [zipWith (*) ic (drop n $ reverse (tail rhs)) | n <- [0..len rhs-2]]
+--                  equation  f^i(0) g^j(0)   L{equation}
+laplace :: Num a => LCDE a -> [a] -> [a] -> Transformed a
+laplace (LCDE (lhs, rhs)) f0 g0 = transformed where
+  transformed = Transformed (lhs, rhs) (zipWithL 0 (-) lc rc)
+  lc = map sum [zipWith (*) f0 (drop n lhs) | n <- [1..length lhs-1]]
+  rc = map sum [zipWith (*) g0 (drop n rhs) | n <- [1..length rhs-1]]
 %\end{code}
 
 Albeit a bit convoluted, we now have a representation of LCDE when it is laplace transformed.
@@ -138,5 +140,18 @@ tfG s = evalRE (findTF lcde) s
 \end{code}
 
 The function tfG above is the transfer function from the differential equation lcde.
+
+
+
+
+\begin{code}
+-- HELPER FUNCTIONS --
+--       null-val zip-function   left   right  zipped
+zipWithL :: a -> (a -> a -> b) -> [a] -> [a] -> [b]
+zipWithL i f (l:left) (r:right) = f l r : zipWithL i f left right
+zipWithL _ _ []       []        = []
+zipWithL i f []       (r:right) = f i r : zipWithL i f []   right
+zipWithL i f (l:left) []        = f l i : zipWithL i f left []
+\end{code}
 
 \end{document}
