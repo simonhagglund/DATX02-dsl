@@ -167,7 +167,7 @@ sys = (<*> f)
 \end{codeeq}
 Or equivalently:
 \begin{codeeq}
-sys = \sig -> laplace sig * F
+sys = \sig -> invlaplace $ laplace sig * F
 \end{codeeq}
 where \texttt{sysf} has LTI-function f and transfer function F.
 \end{newtext}
