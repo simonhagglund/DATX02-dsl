@@ -51,6 +51,10 @@ git pull --rebase # with this you are least likely to get mearge conflicts
 
 #push
 git push
+
+
+## Submodules
+git submodule init --update
 ```
 
 
@@ -71,7 +75,10 @@ Overleaf can sync to a Github repository, making versioning of the reports seaml
 Commit from overleaf by clicking menu->github and press sync.
 
 ## Reports
-[Planning report](https://www.overleaf.com/6341261623qvmpxjkcdzqp).
+[Planning Report](https://www.overleaf.com/6341261623qvmpxjkcdzqp).
+
+[Project Report](https://www.overleaf.com/project/5e53e565436caa0001b56700).
+
 
 ## Links
 [Drive](https://drive.google.com/drive/folders/13Dp8TciAj32UDbi2cMLHMFrGdX0Hr7FH)
