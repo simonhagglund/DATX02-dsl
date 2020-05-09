@@ -1,4 +1,7 @@
 \begin{code}
+module Nyquist where
+
+
 
 type R = Double
 data C = C R R
