@@ -4,7 +4,7 @@ module Nyquist where
 
 
 type R = Double
-data C = C R R
+data C = C R R deriving (Eq)
 
 re, im :: C -> R
 re (C r _) = r
@@ -18,6 +18,10 @@ instance Num C where
   abs      (C r i)  = C (sqrt $ r * r + i * i) 0
   signum z@(C r i)  = C (r / (re.abs) z) (i / (re.abs) z)
   fromInteger i     = C (fromInteger i) 0
+
+instance Fractional C where
+  C a b / C c d = 1/(c^2+d^2) *& C (a*c+b*d) (b*c-a*d)
+  fromRational r = C (fromRational r) 0
 
 instance Show C where
   show (C r i) | i == 0 = show r
