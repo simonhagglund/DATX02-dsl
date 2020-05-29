@@ -184,14 +184,14 @@ splitting a signal, then adding together again; Fb x y creates a feedback-loop
 going around x, with y as block on fb-loop.
 \begin{code}
 data Lti where
-  DDelt :: Lti
+  Unit  :: Lti
   Tf    :: String -> Lti
   (:→:) :: Lti -> Lti -> Lti
   (:<>:):: Lti -> (Lti, Lti) -> Lti
   Fb    :: Lti -> Lti -> Lti
 
 testcl :: Lti
-testcl = Fb (Tf "G" :→: Tf "H") DDelt
+testcl = Fb (Tf "G" :→: Tf "H") Unit
 
 evalLti :: (Fractional a, Num a) => (String -> (a -> a)) -> Lti -> (a -> a)
 evalLti d (Tf s) = d s
@@ -203,6 +203,7 @@ evalLti d (Fb a b) = evalLti d a / (1 - evalLti d a * evalLti d b)
 instance Num b => Num (a -> b) where
   f + g = \x -> f x + g x
   f * g = \x -> f x * g x
+  f - g = \x -> f x - g x
 instance Fractional b => Fractional (a -> b) where
   f / g = \x -> f x / g x
 
@@ -235,17 +236,44 @@ syst = a :+> (\beta -> b :+> (\alpha -> c :→ beta :→ d :→ alpha :<> (e,e:�
 
 evalLTi :: (Num a, Fractional a) => (String -> (a -> a)) -> LTi -> (a -> a)
 evalLTi d l = fst (eval l) / (1 - (sum . snd . eval) l) where
-  eval (Stop :→   _) = (1, [])
-  eval (Stop :<>  _) = (1, [])
-  eval (Stop :+>  _) = (1, [])
+  --eval :: LTi -> (a -> a, [a -> a])
+  eval (x :→   _) | containsStop x = (const 1, [])
+  eval (x :<>  _) | containsStop x = (const 1, [])
+  eval (x :+>  _) | containsStop x = (const 1, [])
   eval (TrF s)         = (d s, [])
-  eval (a :→  b)       = (eval a * eval b, [])
-  eval (a :<> (b,  c)) = (eval a * (eval b + eval c), [])
-  eval (a :+> (fb, f)) = (local, f * local) where
+  eval (a :→  b)       = (evalLTi d a * evalLTi d b, [])
+  eval (a :<> (b,  c)) = (evalLTi d a * (evalLTi d b + evalLTi d c), [])
+  eval (a :+> (fb, f)) = (fst local, evalLTi d f * fst local : snd local) where
     local = eval (fb Stop)
+  containsStop :: LTi -> Bool
+  containsStop Stop = True
+  containsStop (a :→ b) = containsStop a || containsStop b
+  containsStop (a :<> (b, c)) = containsStop a || containsStop b || containsStop c
+  containsStop (a :+> (f, c)) = containsStop a || containsStop (f (TrF "")) || containsStop c
+  containsStop (TrF _) = False
 
 
-prop_advLTITest = evalLTi d syst == undefined where
-  d = undefined
+
+a ~== b = abs (a - b) < 0.001
+
+prop_advLTITest ca cb cc cd ce cf cg ch x = evalLTi dict syst x ~== (a*b*c*d*(e*h+e*g*h)/(1 - b*c-c*d*f)) x where
+  dict "A" = a
+  dict "B" = b
+  dict "C" = c
+  dict "D" = d
+  dict "E" = e
+  dict "F" = f
+  dict "G" = g
+  dict "H" = h
+  a x = sum [x^k * ca !! k | k<-[0..length ca]]
+  b x = sum [x^k * cb !! k | k<-[0..length cb]]
+  c x = sum [x^k * cc !! k | k<-[0..length cc]]
+  d x = sum [x^k * cd !! k | k<-[0..length cd]]
+  e x = sum [x^k * ce !! k | k<-[0..length ce]]
+  f x = sum [x^k * cf !! k | k<-[0..length cf]]
+  g x = sum [x^k * cg !! k | k<-[0..length cg]]
+  h x = sum [x^k * ch !! k | k<-[0..length ch]]
+
+
 
 \end{code}
