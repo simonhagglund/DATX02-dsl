@@ -184,22 +184,68 @@ splitting a signal, then adding together again; Fb x y creates a feedback-loop
 going around x, with y as block on fb-loop.
 \begin{code}
 data Lti where
+  DDelt :: Lti
   Tf    :: String -> Lti
   (:→:) :: Lti -> Lti -> Lti
   (:<>:):: Lti -> (Lti, Lti) -> Lti
   Fb    :: Lti -> Lti -> Lti
 
 testcl :: Lti
-testcl = Fb (Tf "G" :→: Tf "H")
+testcl = Fb (Tf "G" :→: Tf "H") DDelt
 
-evalLti :: Num a => (String -> (a -> a)) -> Lti -> (a -> a)
+evalLti :: (Fractional a, Num a) => (String -> (a -> a)) -> Lti -> (a -> a)
 evalLti d (Tf s) = d s
 evalLti d (a :→: b) = evalLti d a * evalLti d b
 evalLti d (a :<>: (b, c)) = evalLti d a * (evalLti d b + evalLti d c)
 evalLti d (Fb a b) = evalLti d a / (1 - evalLti d a * evalLti d b)
+
+-- TODO Migrate. Import funnuminst
+instance Num b => Num (a -> b) where
+  f + g = \x -> f x + g x
+  f * g = \x -> f x * g x
+instance Fractional b => Fractional (a -> b) where
+  f / g = \x -> f x / g x
 
 \end{code}
 This proves easy to evaluate. Where the original was expressive enough to
 be able to describe every system, this has some limiting factors. The DSL
 could be expanded to provide full expressiveness, but this would make the
 evaluation much less pretty.
+
+
+To try out how well a fully expressive DSL would work:
+\begin{code}
+data LTi where
+  Stop  :: LTi
+  TrF   :: String -> LTi
+  (:→)  :: LTi -> LTi -> LTi
+  (:<>) :: LTi -> (LTi, LTi) -> LTi
+  (:+>) :: LTi -> ((LTi -> LTi), LTi) -> LTi
+
+syst = a :+> (\beta -> b :+> (\alpha -> c :→ beta :→ d :→ alpha :<> (e,e:→g) :→ h, f), unit) where
+  a = TrF "A"
+  b = TrF "B"
+  c = TrF "C"
+  d = TrF "D"
+  e = TrF "E"
+  f = TrF "F"
+  g = TrF "G"
+  h = TrF "H"
+  unit = TrF "1"
+
+evalLTi :: (Num a, Fractional a) => (String -> (a -> a)) -> LTi -> (a -> a)
+evalLTi d l = fst (eval l) / (1 - (sum . snd . eval) l) where
+  eval (Stop :→   _) = (1, [])
+  eval (Stop :<>  _) = (1, [])
+  eval (Stop :+>  _) = (1, [])
+  eval (TrF s)         = (d s, [])
+  eval (a :→  b)       = (eval a * eval b, [])
+  eval (a :<> (b,  c)) = (eval a * (eval b + eval c), [])
+  eval (a :+> (fb, f)) = (local, f * local) where
+    local = eval (fb Stop)
+
+
+prop_advLTITest = evalLTi d syst == undefined where
+  d = undefined
+
+\end{code}
