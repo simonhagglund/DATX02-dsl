@@ -4,3 +4,6 @@
 [submodule "product_overleaf"]
 	path = product_overleaf
 	url = git@github.com:simonhagglund/DATX02-dsl-produkt.git
+[submodule "rapport"]
+	path = rapport
+	url = git@github.com:simonhagglund/Rapport.git
